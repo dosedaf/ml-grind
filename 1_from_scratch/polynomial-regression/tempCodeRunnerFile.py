@@ -1,2 +1,0 @@
-
-new_coeffs = [a, 
