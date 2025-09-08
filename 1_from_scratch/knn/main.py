@@ -18,11 +18,11 @@ def euclidean_distance(p, q):
 
 
 def manhattan_distance(p, q):
-    return abs(np.sum((np.array(p) - np.array(q))))
+    return np.sum(np.abs((np.array(p) - np.array(q))))
 
 
 def minkowski_distance(p, q):
-    return math.sum(((abs(np.array(p) - np.array(q))) ** q) ** 1 / q)
+    return (np.sum((abs(np.array(p) - np.array(q))) ** q)) ** (1 / q)
 
 
 class KNearestNeighbors:
@@ -53,14 +53,17 @@ class KNearestNeighbors:
 
         result = Counter(neighbors).most_common(1)[0][0]
 
-        if len(neighbors) % 2 == 0:
-            if neighbors.count(categories[0]) == neighbors.count(categories[1]):
-                result = Counter(neighbors[: len(neighbors) - 1]).most_common(1)[0][0]
+        counts = Counter(neighbors)
+        print(counts)
+        max_count = max(counts.values())
+        print(max_count)
+        print(counts.items())
 
-        # print(
-        # f"result : {Counter(neighbors[: len(neighbors) - 1]).most_common(1)[0][0]}"
-        # )
-        # print(f"result : {Counter(neighbors).most_common(1)[0][0]}")
+        tied = [label for label, c in counts.items() if c == max_count]
+
+        if len(tied) > 1:
+            result = Counter(neighbors[:-1]).most_common(1)[0][0]
+
         return sorted_distances[self.k - 1], result
 
     def predict(self, new_points):
