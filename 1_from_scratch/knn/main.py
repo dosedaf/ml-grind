@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import math
-import pandas as pd
 from collections import Counter
 
 
@@ -11,6 +9,7 @@ points = {
 }
 
 new_point = [4, 3]
+new_points = [[4, 3], [3, 8], [7, 8]]
 
 
 def euclidean_distance(p, q):
@@ -21,8 +20,8 @@ def manhattan_distance(p, q):
     return np.sum(np.abs((np.array(p) - np.array(q))))
 
 
-def minkowski_distance(p, q):
-    return (np.sum((abs(np.array(p) - np.array(q))) ** q)) ** (1 / q)
+def minkowski_distance(p, q, order=3):
+    return (np.sum((abs(np.array(p) - np.array(q))) ** order)) ** (1 / order)
 
 
 class KNearestNeighbors:
@@ -35,15 +34,13 @@ class KNearestNeighbors:
 
     def predict_single(self, new_point):
         distances = []
-        categories = []
 
         for category in self.points:
-            categories.append(category)
             for point in self.points[category]:  # red, blue
                 distance = euclidean_distance(point, new_point)
                 distances.append([distance, category])
 
-        sorted_distances = sorted(distances)
+        sorted_distances = sorted(distances, key=lambda x: x[0])
 
         sorted_points = [
             category[1] for category in sorted_distances
@@ -54,10 +51,8 @@ class KNearestNeighbors:
         result = Counter(neighbors).most_common(1)[0][0]
 
         counts = Counter(neighbors)
-        print(counts)
+
         max_count = max(counts.values())
-        print(max_count)
-        print(counts.items())
 
         tied = [label for label, c in counts.items() if c == max_count]
 
@@ -69,27 +64,32 @@ class KNearestNeighbors:
     def predict(self, new_points):
         results = []
         for p in new_points:
-            result = self.predict_single(p)
+            _, result = self.predict_single(p)
             results.append(result)
 
         return results
 
 
-xy = points["blue"] + points["red"]
-# print(xy)
+def plotable(points, new_points):
+    xy = points["blue"] + points["red"]
 
-x = []
-y = []
+    x = []
+    y = []
 
-colors = 5 * ["blue"] + 5 * ["red"] + ["green"]
+    colors = 5 * ["blue"] + 5 * ["red"] + len(new_points) * ["green"]
 
-for i in xy:
-    x.append(i[0])
-    y.append(i[1])
+    for i in xy:
+        x.append(i[0])
+        y.append(i[1])
 
-x.append(new_point[0])
-y.append(new_point[1])
+    for new_point in new_points:
+        x.append(new_point[0])
+        y.append(new_point[1])
 
+    return x, y, colors
+
+
+x, y, colors = plotable(points, new_points)
 
 plt.figure(figsize=(8, 8))
 plt.scatter(x, y, c=colors)
@@ -99,12 +99,18 @@ plt.ylabel("y")
 
 clf = KNearestNeighbors(k=4)
 clf.fit(points)
-limit_point, result = clf.predict_single(new_point)
+
+kth_neighbor, result = clf.predict_single(new_point)
+
+radius = kth_neighbor[0]
+
+results = clf.predict(new_points)
 
 print(f"result: {result}")
+print(f"results: {results}")
 
-a = new_point[0] + limit_point[0].item() * np.cos(np.linspace(0, 2 * np.pi, 200))
-b = new_point[1] + limit_point[0].item() * np.sin(np.linspace(0, 2 * np.pi, 200))
+a = new_point[0] + radius * np.cos(np.linspace(0, 2 * np.pi, 200))
+b = new_point[1] + radius * np.sin(np.linspace(0, 2 * np.pi, 200))
 
 plt.plot(a, b, color="red")
 
